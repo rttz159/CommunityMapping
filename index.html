@@ -113,7 +113,6 @@
 </head>
 
 <body>
-
     <section class="flexbox">
         <nav class="sidebar">
             <img src="./css/images/flag.png" alt="flag of Sarawak" class="srwk-flag">
@@ -978,6 +977,15 @@
                 addClassToPopupIfMedia(content, e.popup);
             });
             layer.bindPopup(content, { maxHeight: 400 });
+
+            layer.on('click', function (e) {
+                var feature = e.target.feature;
+                var name = feature.properties.name;
+                var coordinates = feature.geometry.coordinates;
+
+                console.log("Name:", name);
+                console.log("Coordinates:", coordinates);
+            });
         }
 
         function style_Grocery_Retailers_9_0() {
