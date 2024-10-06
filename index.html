@@ -1390,11 +1390,11 @@
             resetLabels([layer_Districts_8]);
         });
 
-        // var bounds = [[0.14735230926146703, 108.18141465546034], [5.32862001331641, 117.2980911773162]];
-        // map.setMaxBounds(bounds);
-        // map.on('drag', function () {
-        //     map.panInsideBounds(bounds);
-        // });
+        var bounds = [[0.14735230926146703, 108.18141465546034], [5.32862001331641, 117.2980911773162]];
+        map.setMaxBounds(bounds);
+        map.on('drag', function () {
+            map.panInsideBounds(bounds);
+        });
 
         function isNodeVisible(node) {
             var mapBounds = map.getBounds();
