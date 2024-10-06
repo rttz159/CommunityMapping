@@ -1022,18 +1022,38 @@
         });
         bounds_group.addLayer(layer_Districts_8);
         map.addLayer(layer_Districts_8);
-        function getAddressFromNominatim(lat, lon, callback) {
-            const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
 
+        let addressCache = {};
+        let lastRequestTime = 0;
+
+        function getAddressFromNominatim(lat, lon, callback) {
+            const cacheKey = `${lat},${lon}`;
+            const now = Date.now();
+            if (addressCache[cacheKey]) {
+                callback(addressCache[cacheKey]);
+                return;
+            }
+            if (now - lastRequestTime < 1000) {
+                setTimeout(() => getAddressFromNominatim(lat, lon, callback), 1000);
+                return;
+            }
+            lastRequestTime = now;
+            const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
             fetch(nominatimUrl)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    const address = data.display_name || "";
+                    const address = data.display_name || "Address not found";
+                    addressCache[cacheKey] = address;
                     callback(address);
                 })
                 .catch(error => {
                     console.error("Error fetching address:", error);
-                    callback("");
+                    callback("Address not found");
                 });
         }
 
