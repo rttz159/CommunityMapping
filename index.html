@@ -37,6 +37,11 @@
 
         main {
             width: 85%;
+            position: relative;
+        }
+
+        #titlebox {
+            display: block;
         }
 
         .sidebar {
@@ -70,49 +75,39 @@
             margin-right: 10px;
             width: 20px;
             height: 20px;
-            vertical-align: middle;
         }
 
-        .sidebar>header {
+        .sidebar header {
             width: 100%;
             text-align: center;
             font-size: 24px;
             font-weight: bolder;
         }
 
-        .info-popup {
-            position: absolute;
-            background-color: #f9f9f9;
-            padding: 10px;
-            border: 1px solid #ccc;
-            width: 275px;
-            z-index: 1;
-            opacity: 0;
-            transform: translateY(-100%);
-            transition: opacity 0.5s, transform 0.5s;
-            pointer-events: none;
-        }
-
-        .info-link:hover+.info-popup {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translateY(0);
-            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-        }
-
-        .info-link:not(:hover)+.info-popup {
-            opacity: 0;
-            transform: translateY(100%);
-            transition: opacity 1s ease-in-out, transform 1s ease-in-out;
-            pointer-events: none;
+        #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            transition: height 0.5s;
         }
 
         .address-table-container,
         .forecast-table-container {
-            height: 20%;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-height: 40vh;
             background-color: #F5F5F5;
-            overflow-y: scroll;
+            overflow-y: auto;
             display: none;
+            z-index: 1000;
+            border: 1px solid #ccc;
+            padding: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            height: 150px;
         }
 
         #address-table,
@@ -120,7 +115,6 @@
             width: 100%;
             border: 1px solid #ccc;
             border-collapse: collapse;
-            margin-bottom: 10px;
         }
 
         #address-table thead,
@@ -158,12 +152,114 @@
             color: rgba(255, 0, 0, 0.603);
         }
 
-        #map {
-            width: 100%;
-            height: 100%;
-            padding: 0;
-            margin: 0;
-            transition: height 0.5s;
+        .info-popup {
+            position: absolute;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ccc;
+            width: 275px;
+            z-index: 9999999;
+            opacity: 0;
+            transform: translateY(-100%);
+            transition: opacity 0.5s, transform 0.5s;
+            pointer-events: none;
+        }
+
+        .info-link:hover+.info-popup {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        }
+
+        /* General Mobile Styles */
+        @media screen and (max-width: 1000px) {
+            .flexbox {
+                flex-direction: column;
+                height: 100%;
+            }
+
+            .sidebar {
+                width: 100%;
+                flex: 1;
+            }
+
+            #titlebox {
+                display: flex;
+                padding-left: 10px;
+                padding-right: 10px;
+                justify-content: center;
+                align-items: center;
+            }
+
+            #titlebox header {
+                flex: 5;
+            }
+
+            #titlebox header h1 {
+                text-align: left;
+                padding-left: 30%;
+            }
+
+            .srwk-flag {
+                width: 20%;
+                min-width: 130px;
+                height: auto;
+                flex: 1;
+            }
+
+            .info-popup {
+                width: 100%;
+                transform: none;
+            }
+
+            main {
+                width: 100%;
+                flex: 5.15;
+            }
+
+            .address-table-container,
+            .forecast-table-container {
+                max-height: 30vh;
+            }
+        }
+
+        @media screen and (max-width: 760px) {
+            #titlebox header h1 {
+                text-align: left;
+                padding-left: 25%;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .srwk-flag {
+                display: none;
+            }
+
+            #titlebox header h1 {
+                text-align: center;
+                padding-left: 0;
+            }
+
+            .sidebar li a {
+                font-size: 14px;
+                padding: 8px 10px;
+            }
+
+            #map {
+                flex: 5.15;
+                min-height: 70vh;
+            }
+
+            .address-table-container,
+            .forecast-table-container {
+                max-height: 40vh;
+            }
+        }
+
+        /* Show table when clicked */
+        .show-table {
+            display: block !important;
         }
     </style>
     <title>Sarawak Savvy</title>
@@ -172,10 +268,12 @@
 <body>
     <section class="flexbox">
         <nav class="sidebar">
-            <img src="./css/images/flag.png" alt="flag of Sarawak" class="srwk-flag">
-            <header>
-                <h1>Sarawak Savvy</h1>
-            </header>
+            <div id="titlebox">
+                <img src="./css/images/flag.png" alt="flag of Sarawak" class="srwk-flag">
+                <header>
+                    <h1>Sarawak Savvy</h1>
+                </header>
+            </div>
             <ul>
                 <li>
                     <a href="#" class="info-link">
@@ -184,11 +282,14 @@
                         Information
                     </a>
                     <div class="info-popup">
-                        <p>1. Welcome to Sarawak Savvy! This page provides an interactive map of Sarawak, Malaysia.</p>
-                        <p>2. To navigate the map, use the zoom controls in the top left corner or click and drag the
+                        <p>1. Welcome to Sarawak Savvy! This page provides an interactive map of Sarawak, Malaysia.
+                        </p>
+                        <p>2. To navigate the map, use the zoom controls in the top left corner or click and drag
+                            the
                             map to pan.</p>
                         <p>3. Click on a location to view more information about that area.</p>
-                        <p>4. Use the layer control in the top right corner to toggle different layers of information on
+                        <p>4. Use the layer control in the top right corner to toggle different layers of
+                            information on
                             and off.</p>
                         <p>5. Click the location icon on the top left corner to access your current location.</p>
                     </div>
@@ -1447,14 +1548,26 @@
         function showWeatherTable() {
             document.getElementById('forecast-table-container').style.display = 'block';
             document.getElementById('address-table-container').style.display = 'none';
-            document.getElementById('map').style.height = '80%';
         }
 
         function showGroceryTable() {
             document.getElementById('address-table-container').style.display = 'block';
             document.getElementById('forecast-table-container').style.display = 'none';
-            document.getElementById('map').style.height = '80%';
         }
+
+        document.querySelectorAll('.info-link').forEach(item => {
+            item.addEventListener('click', function (e) {
+                e.preventDefault();
+                let popup = this.nextElementSibling;
+                if (popup.style.opacity == 1) {
+                    popup.style.opacity = 0;
+                    popup.style.pointerEvents = 'none';
+                } else {
+                    popup.style.opacity = 1;
+                    popup.style.pointerEvents = 'auto';
+                }
+            });
+        });
 
     </script>
 </body>
