@@ -102,20 +102,25 @@
             pointer-events: none;
         }
 
-        .address-table-container {
+        .address-table-container,
+        .forecast-table-container {
             height: 20%;
             background-color: #F5F5F5;
             overflow-y: scroll;
+            display: none;
+            /* Initially hidden */
         }
 
-        #address-table {
+        #address-table,
+        #forecast-table {
             width: 100%;
             border: 1px solid #ccc;
             border-collapse: collapse;
             margin-bottom: 10px;
         }
 
-        #address-table thead {
+        #address-table thead,
+        #forecast-table thead {
             position: sticky;
             top: 0;
             background-color: #FF9800;
@@ -123,39 +128,26 @@
             font-weight: bold;
         }
 
-        #address-table thead #address-table tbody {
-            overflow-y: scroll;
-            height: 100%;
-        }
-
-        #address-table tbody tr {
+        #address-table tbody tr,
+        #forecast-table tbody tr {
             background-color: #F5F5F5;
         }
 
         #address-table th,
-        #address-table td {
+        #address-table td,
+        #forecast-table th,
+        #forecast-table td {
             padding: 10px;
             border: 1px solid #ccc;
             text-align: left;
         }
 
-        #address-table td {
-            color: #333333;
-        }
-
-        #address-table a {
-            color: #333333;
-        }
-
-        #address-table a:hover {
-            color: rgba(255, 0, 0, 0.603);
-        }
-
         #map {
             width: 100%;
-            height: 80%;
+            height: 100%;
             padding: 0;
             margin: 0;
+            transition: height 0.5s;
         }
     </style>
     <title>Sarawak Savvy</title>
@@ -174,26 +166,22 @@
                     <div class="info-popup">
                         <p>1. Welcome to Sarawak Savvy! This page provides an interactive map of Sarawak, Malaysia.</p>
                         <p>2. To navigate the map, use the zoom controls in the top left corner or click and drag the
-                            map to
-                            pan.</p>
+                            map to pan.</p>
                         <p>3. Click on a location to view more information about that area.</p>
                         <p>4. Use the layer control in the top right corner to toggle different layers of information on
-                            and
-                            off.</p>
+                            and off.</p>
                         <p>5. Click the location icon on the top left corner to access your current location.</p>
                     </div>
                 </li>
-                <li><a href="#">Weather</a></li>
-                <li><a href="#">Grocery</a></li>
+                <li><a href="#" onclick="showWeatherTable(); getWeather();">Weather</a></li>
+                <li><a href="#" onclick="showGroceryTable()">Grocery</a></li>
             </ul>
-            <div>
-
-            </div>
         </nav>
         <main>
             <div id="map">
+                <!-- Your map will be initialized here -->
             </div>
-            <div class="address-table-container">
+            <div class="address-table-container" id="address-table-container">
                 <table id="address-table">
                     <thead>
                         <tr>
@@ -204,6 +192,26 @@
                     </thead>
                     <tbody id="address-table-content">
                         <tr>
+                            <td>NA</td>
+                            <td>NA</td>
+                            <td>NA</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="forecast-table-container" id="forecast-table-container">
+                <table id="forecast-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Summary Forecast</th>
+                            <th>Min Temp (°C)</th>
+                            <th>Max Temp (°C)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="forecast-table-content">
+                        <tr>
+                            <td>NA</td>
                             <td>NA</td>
                             <td>NA</td>
                             <td>NA</td>
@@ -275,7 +283,7 @@
         var zoomControl = L.control.zoom({
             position: 'topleft'
         }).addTo(map);
-        L.control.locate({ locateOptions: { maxZoom: 19 } }).addTo(map);
+        const locateControl = L.control.locate({ locateOptions: { maxZoom: 19 } }).addTo(map);
         var bounds_group = new L.featureGroup([]);
         function setBounds() {
         }
@@ -1272,6 +1280,11 @@
         let currentTableData = [];
 
         function updateVisibleNodes() {
+            const isForecastTableVisible = document.getElementById('forecast-table-container').style.display !== 'none';
+
+            if (isForecastTableVisible) {
+                return;
+            }
             var visibleNodes = layer_Grocery_Retailers_9.getLayers().filter(function (node) {
                 return isNodeVisible(node);
             }).slice(0, 5);
@@ -1328,6 +1341,92 @@
         }
 
         map.on('moveend', debounce(updateVisibleNodes, 1000));
+
+        var weatherJson = null;
+        var districtID = null;
+
+        function checkUserDistrict(lat, lon) {
+            const userLocation = L.latLng(lat, lon);
+
+            const layers = layer_Districts_8.getLayers();
+
+            for (let i = 0; i < layers.length; i++) {
+                const layer = layers[i];
+
+                if (layer.getBounds().contains(userLocation)) {
+                    districtID = layer.feature.properties.id;
+                    console.log(`Found district ID: ${districtID} for user location: (${lat}, ${lon})`);
+                    break;
+                }
+            }
+        }
+
+        async function getWeather() {
+            const lastLocation = locateControl._lastLocation;
+            if (lastLocation) {
+                const userLat = lastLocation.latitude;
+                const userLon = lastLocation.longitude;
+                console.log(`Getting weather data for Latitude: ${userLat}, Longitude: ${userLon}`);
+
+                if (!weatherJson) {
+                    checkUserDistrict(userLat, userLon);
+                    if (districtID) {
+                        await fetchWeatherData();
+                    } else {
+                        console.error('Cannot fetch weather data because districtID is null.');
+                        return;
+                    }
+                } else {
+                    console.log('Weather data is already cached:', weatherJson);
+                }
+                const table = document.getElementById("forecast-table-content");
+                table.innerHTML = "";
+                weatherJson.forEach(forecast => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                    <td>${forecast.date}</td>
+                    <td>${forecast.summary_forecast}</td>
+                    <td>${forecast.min_temp}</td>
+                    <td>${forecast.max_temp}</td>
+                `;
+                    table.appendChild(row);
+                });
+            } else {
+                console.warn('No location data available to get weather. Triggering location request...');
+                locateControl.start();
+            }
+        }
+
+        async function fetchWeatherData() {
+
+            const url = `https://api.data.gov.my/weather/forecast?contains=${districtID}@location__location_id`;
+
+            try {
+                console.log(url);
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                const data = await response.json();
+                weatherJson = data;
+                console.log('Weather data fetched:', weatherJson);
+            } catch (error) {
+                console.error('Error fetching weather data:', error);
+            }
+        }
+
+        function showWeatherTable() {
+            document.getElementById('forecast-table-container').style.display = 'block';
+            document.getElementById('address-table-container').style.display = 'none';
+            document.getElementById('map').style.height = '80%';
+        }
+
+        function showGroceryTable() {
+            document.getElementById('address-table-container').style.display = 'block';
+            document.getElementById('forecast-table-container').style.display = 'none';
+            document.getElementById('map').style.height = '80%';
+        }
+
     </script>
 </body>
 
