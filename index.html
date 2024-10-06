@@ -52,7 +52,9 @@
         }
 
         .sidebar li a {
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
             color: #333;
             padding: 16px 25px;
             text-decoration: none;
@@ -64,8 +66,11 @@
             color: #333;
         }
 
-        .sidebar li a i {
+        .sidebar li a img {
             margin-right: 10px;
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
         }
 
         .sidebar>header {
@@ -108,7 +113,6 @@
             background-color: #F5F5F5;
             overflow-y: scroll;
             display: none;
-            /* Initially hidden */
         }
 
         #address-table,
@@ -142,6 +146,18 @@
             text-align: left;
         }
 
+        #address-table td {
+            color: #333333;
+        }
+
+        #address-table a {
+            color: #333333;
+        }
+
+        #address-table a:hover {
+            color: rgba(255, 0, 0, 0.603);
+        }
+
         #map {
             width: 100%;
             height: 100%;
@@ -162,7 +178,11 @@
             </header>
             <ul>
                 <li>
-                    <a href="#" class="info-link">Information</a>
+                    <a href="#" class="info-link">
+                        <img src="legend\Icon_Information.png" alt="Information Icon"
+                            style="width: 20px; height: 20px;">
+                        Information
+                    </a>
                     <div class="info-popup">
                         <p>1. Welcome to Sarawak Savvy! This page provides an interactive map of Sarawak, Malaysia.</p>
                         <p>2. To navigate the map, use the zoom controls in the top left corner or click and drag the
@@ -173,13 +193,22 @@
                         <p>5. Click the location icon on the top left corner to access your current location.</p>
                     </div>
                 </li>
-                <li><a href="#" onclick="showWeatherTable(); getWeather();">Weather</a></li>
-                <li><a href="#" onclick="showGroceryTable()">Grocery</a></li>
+                <li>
+                    <a href="#" onclick="showWeatherTable(); getWeather();">
+                        <img src="legend/Icon_Weather.png" alt="Weather Icon" style="width: 20px; height: 20px;">
+                        Weather
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showGroceryTable();">
+                        <img src="legend/Icon_Grocery.png" alt="Weather Icon" style="width: 20px; height: 20px;">
+                        Grocery
+                    </a>
+                </li>
             </ul>
         </nav>
         <main>
             <div id="map">
-                <!-- Your map will be initialized here -->
             </div>
             <div class="address-table-container" id="address-table-container">
                 <table id="address-table">
